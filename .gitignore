@@ -1,1 +1,7 @@
+<<<<<<< HEAD
 .venv
+=======
+/build
+/.vscode
+/.devcontainer
+>>>>>>> dc023b1 (Initial ESP32 IDF project setup)
