@@ -1,10 +1,10 @@
-package com.tf2113.temp;
+package com.tf2113.backend;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class TempApplicationTests {
+class BackendApplicationTests {
 
 	@Test
 	void contextLoads() {
