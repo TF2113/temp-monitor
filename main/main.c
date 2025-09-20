@@ -27,3 +27,12 @@ void i2c_controller_init() {
     i2c_param_config(I2C_NUM_0, &i2c_config);
     i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER,0,0,0);
 }
+
+void app_main(void)
+{
+    ESP_LOGI("TEMP_MONITOR", "Hello ESP32-S3!");
+
+    while(1) {
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
