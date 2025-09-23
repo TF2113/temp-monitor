@@ -18,7 +18,7 @@ public class ReadingController {
         this.readingRepository = readingRepository;
     }
 
-    @PostMapping
+    @PostMapping("/submitReading")
     public Reading saveReading(@RequestBody Reading reading){
         if(reading.getTimestamp() == null){
             reading.setTimestamp(LocalDateTime.now());
