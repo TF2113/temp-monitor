@@ -13,6 +13,8 @@ import java.util.UUID;
 @Repository
 public interface ReadingRepository extends JpaRepository<Reading, UUID> {
 
+    Optional<Reading> findFirstByOrderByTimestampDesc();
+
     @Query("SELECT AVG(r.temperature) from Reading r WHERE r.timestamp >= :start")
     Double findAverageTempSince(@Param("start") LocalDateTime start);
 

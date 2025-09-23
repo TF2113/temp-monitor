@@ -2,9 +2,11 @@ package com.tf2113.backend.controllers;
 
 import com.tf2113.backend.domain.entities.Reading;
 import com.tf2113.backend.repositories.ReadingRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/readings")
@@ -24,19 +26,24 @@ public class ReadingController {
         return readingRepository.save(reading);
     }
 
-    @GetMapping("/readings/averageTemp")
+    @GetMapping("/recentReading")
+    public ResponseEntity<Reading> getRecentReading() {
+        return readingRepository.findFirstByOrderByTimestampDesc().map(ResponseEntity::ok).orElse(ResponseEntity.noContent().build());
+    }
+
+    @GetMapping("/averageTemp")
     public Double getAverageTemp(@RequestParam("period") String period) {
         LocalDateTime start = calculateStartTime(period);
         return readingRepository.findAverageTempSince(start);
     }
 
-    @GetMapping("/readings/averageHum")
+    @GetMapping("/averageHum")
     public Double getAverageHum(@RequestParam("period") String period) {
         LocalDateTime start = calculateStartTime(period);
         return readingRepository.findAverageHumSince(start);
     }
 
-    @GetMapping("/readings/averagePressure")
+    @GetMapping("/averagePressure")
     public Double getAveragePressure(@RequestParam("period") String period) {
         LocalDateTime start = calculateStartTime(period);
         return readingRepository.findAveragePressureSince(start);
