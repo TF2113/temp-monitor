@@ -1,9 +1,18 @@
 #include <stdio.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <string.h>
 
 #include "driver/gpio.h"
 #include "driver/i2c.h"
 #include "esp_err.h"
 #include "esp_log.h"
+
+#include "esp_wifi.h"
+#include "esp_event.h"
+#include "esp_netif.h"
+#include "nvs_flash.h"
+
 #include "freertos/task.h"
 
 #include "sdkconfig.h"
@@ -12,7 +21,12 @@
 #define SDA_PIN GPIO_NUM_8
 #define SCL_PIN GPIO_NUM_9
 
-#define TAG_BME280 "BME280"
+#include "wifi_config.h"
+#define MAX_RETRY 10
+
+#define API_ENDPOINT = "http://localhost:8080/readings/submitReading"
+
+static int retry_cnt = 0;
 
 void i2c_controller_init() {
 
@@ -28,9 +42,129 @@ void i2c_controller_init() {
     i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER,0,0,0);
 }
 
-void app_main(void) {
-    ESP_LOGI("TEMP_MONITOR", "Hello ESP32-S3!");
+s8 BME280_I2C_bus_write(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt){
+    
+    s32 iError = BME280_INIT_VALUE;
+    esp_err_t espRc;
 
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (dev_addr << 1) | I2C_MASTER_WRITE, true);
+
+    i2c_master_write_byte(cmd, reg_addr, true);
+    i2c_master_write(cmd, reg_data, cnt, true);
+    i2c_master_stop(cmd);
+
+    espRc = i2c_master_cmd_begin(I2C_NUM_0, cmd, 10/portTICK_PERIOD_MS);
+    if (espRc == ESP_OK){
+        iError = SUCCESS;
+    } else {
+        iError = ESP_FAIL;
+    }
+
+    i2c_cmd_link_delete(cmd);
+
+    return (s8)iError;
+}
+
+s8 BME280_I2C_bus_read(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt){
+    
+    s32 iError = BME280_INIT_VALUE;
+    esp_err_t espRc;
+
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (dev_addr << 1) | I2C_MASTER_WRITE, true);
+    i2c_master_write(cmd, reg_data, cnt, true);
+
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (dev_addr << 1) | I2C_MASTER_READ, true);
+
+    if (cnt > 1){
+        i2c_master_read(cmd, reg_data, cnt-1, I2C_MASTER_ACK);
+    }
+    i2c_master_read_byte(cmd, reg_data+cnt-1, I2C_MASTER_NACK);
+    i2c_master_stop(cmd);
+
+    espRc = i2c_master_cmd_begin(I2C_NUM_0, cmd, 10/portTICK_PERIOD_MS);
+    if (espRc == ESP_OK){
+        iError = SUCCESS;
+    } else {
+        iError = ESP_FAIL;
+    }
+
+    i2c_cmd_link_delete(cmd);
+
+    return (s8)iError;
+}
+
+static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data){
+    
+    switch(event_id){
+        case WIFI_EVENT_STA_START:
+            esp_wifi_connect();
+            ESP_LOGI("TEMP_MONITOR", "Attempting WIFI connection\n");
+            break;
+        
+        case WIFI_EVENT_STA_CONNECTED:
+            ESP_LOGI("TEMP_MONITOR", "WIFI Connected");
+            break;
+        
+        case IP_EVENT_STA_GOT_IP:
+            ESP_LOGI("TEMP_MONITOR", "Got IP");
+            break;
+
+        case WIFI_EVENT_STA_DISCONNECTED:
+            ESP_LOGI("TEMP_MONITOR", "WIFI disconnected, Retrying\n");
+            if (retry_cnt++ < MAX_RETRY){
+                esp_wifi_connect();
+            } else {
+                ESP_LOGI("TEMP_MONITOR", "Max retry attempts reached, closing.\n");
+            }
+            break;
+        
+            default:
+                break;
+    }
+}
+
+void wifi_init(void) {
+
+    esp_event_loop_create_default();
+    esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL);
+    esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL);
+
+    wifi_config_t wifi_config = {
+        .sta = {
+            .ssid = ESP_WIFI_SSD,
+            .password = ESP_WIFI_PASS,
+            .threshold.authmode = WIFI_AUTH_WPA2_PSK,
+        },
+    };
+    esp_netif_init();
+    esp_netif_create_default_wifi_sta();
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    esp_wifi_init(&cfg);
+    esp_wifi_set_mode(WIFI_MODE_STA);
+    esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config);
+    esp_wifi_start();
+
+}
+
+void app_main(void) {
+
+    ESP_LOGI("TEMP_MONITOR", "Hello!");
+
+    esp_err_t ret = nvs_flash_init();
+    if(ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
+    wifi_init();
+    
     while(1) {
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
