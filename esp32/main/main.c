@@ -136,18 +136,10 @@ void sensor_reading(void *params){
             com_rslt = bme280_read_uncomp_pressure_temperature_humidity(&v_uncomp_pressure, &v_uncomp_temperature, &v_uncomp_humidity);
 
             double temp = bme280_compensate_temperature_double(v_uncomp_temperature);
-            char temperature[32];
-            snprintf(temperature, sizeof(temperature), "Temp = %.2f C\n", temp);
-
             double hum = bme280_compensate_humidity_double(v_uncomp_humidity);
-            char humidity[32];
-            snprintf(humidity, sizeof(humidity), "Humidity = %.2f %%\n", hum);
+            double pa = (bme280_compensate_pressure_double(v_uncomp_pressure)/100);
 
-            double pa = bme280_compensate_pressure_double(v_uncomp_pressure);
-            char pressure[32];
-            snprintf(pressure, sizeof(pressure), "Pressure = %.2f hPa\n", pa);
-
-            ESP_LOGI("Sensor", "Temp=%.2fC Hum=%.2f%% Pressure=%.2fhPa", temp, hum, pa);
+            ESP_LOGI("Sensor", "Temp=%.2fC Hum=%.2f%% Pressure=%.2f hPa", temp, hum, pa);
         }
     } else {
         ESP_LOGE("Error", "Init or setting error. Code: %d", com_rslt);
