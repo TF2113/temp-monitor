@@ -12,6 +12,7 @@
 #include "esp_event.h"
 #include "esp_netif.h"
 #include "nvs_flash.h"
+#include "esp_http_client.h"
 
 #include "freertos/task.h"
 
@@ -24,7 +25,7 @@
 #include "wifi_config.h"
 #define MAX_RETRY 10
 
-#define API_ENDPOINT = "http://localhost:8080/readings/submitReading"
+#define API_ENDPOINT "http://localhost:8080/readings/submitReading"
 
 static int retry_cnt = 0;
 
@@ -77,7 +78,7 @@ s8 BME280_I2C_bus_read(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt){
 
     i2c_master_start(cmd);
     i2c_master_write_byte(cmd, (dev_addr << 1) | I2C_MASTER_WRITE, true);
-    i2c_master_write(cmd, reg_data, cnt, true);
+    i2c_master_write_byte(cmd, reg_addr, true);
 
     i2c_master_start(cmd);
     i2c_master_write_byte(cmd, (dev_addr << 1) | I2C_MASTER_READ, true);
@@ -88,7 +89,7 @@ s8 BME280_I2C_bus_read(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt){
     i2c_master_read_byte(cmd, reg_data+cnt-1, I2C_MASTER_NACK);
     i2c_master_stop(cmd);
 
-    espRc = i2c_master_cmd_begin(I2C_NUM_0, cmd, 10/portTICK_PERIOD_MS);
+    espRc = i2c_master_cmd_begin(I2C_NUM_0, cmd, pdMS_TO_TICKS(100));
     if (espRc == ESP_OK){
         iError = SUCCESS;
     } else {
@@ -98,6 +99,60 @@ s8 BME280_I2C_bus_read(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt){
     i2c_cmd_link_delete(cmd);
 
     return (s8)iError;
+}
+
+void BME280_delay_msec(u32 msec) {
+    vTaskDelay(msec/portTICK_PERIOD_MS);
+}
+
+void sensor_reading(void *params){
+
+    struct bme280_t bme280 = {
+        .bus_write = BME280_I2C_bus_write,
+        .bus_read = BME280_I2C_bus_read,
+        .dev_addr = BME280_I2C_ADDRESS1,
+        .delay_msec = BME280_delay_msec
+    };
+
+    s32 com_rslt;
+    s32 v_uncomp_temperature;
+    s32 v_uncomp_humidity;
+    s32 v_uncomp_pressure;
+
+    com_rslt = bme280_init(&bme280);
+
+    com_rslt += bme280_set_oversamp_temperature(BME280_OVERSAMP_2X);
+    com_rslt += bme280_set_oversamp_humidity(BME280_OVERSAMP_1X);
+    com_rslt += bme280_set_oversamp_pressure(BME280_OVERSAMP_16X);
+
+    com_rslt += bme280_set_standby_durn(BME280_STANDBY_TIME_1_MS);
+    com_rslt += bme280_set_filter(BME280_FILTER_COEFF_16);
+
+    com_rslt += bme280_set_power_mode(BME280_NORMAL_MODE);
+    if(com_rslt == SUCCESS){
+        while (true){
+            vTaskDelay(40/portTICK_PERIOD_MS);
+
+            com_rslt = bme280_read_uncomp_pressure_temperature_humidity(&v_uncomp_pressure, &v_uncomp_temperature, &v_uncomp_humidity);
+
+            double temp = bme280_compensate_temperature_double(v_uncomp_temperature);
+            char temperature[32];
+            snprintf(temperature, sizeof(temperature), "Temp = %.2f C\n", temp);
+
+            double hum = bme280_compensate_humidity_double(v_uncomp_humidity);
+            char humidity[32];
+            snprintf(humidity, sizeof(humidity), "Humidity = %.2f %%\n", hum);
+
+            double pa = bme280_compensate_pressure_double(v_uncomp_pressure);
+            char pressure[32];
+            snprintf(pressure, sizeof(pressure), "Pressure = %.2f hPa\n", pa);
+
+            ESP_LOGI("Sensor", "Temp=%.2fC Hum=%.2f%% Pressure=%.2fhPa", temp, hum, pa);
+        }
+    } else {
+        ESP_LOGE("Error", "Init or setting error. Code: %d", com_rslt);
+        vTaskDelete(NULL);
+    }
 }
 
 static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data){
@@ -125,8 +180,8 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
             }
             break;
         
-            default:
-                break;
+        default:
+            break;
     }
 }
 
@@ -164,8 +219,6 @@ void app_main(void) {
     }
     ESP_ERROR_CHECK(ret);
     wifi_init();
-    
-    while(1) {
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
+    i2c_controller_init();
+    xTaskCreate(sensor_reading, "Sensor Reading", 1024*5, NULL, 5, NULL);
 }
