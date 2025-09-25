@@ -7,6 +7,7 @@
 #include "driver/i2c.h"
 #include "esp_err.h"
 #include "esp_log.h"
+#include "esp_sleep.h"
 
 #include "esp_wifi.h"
 #include "esp_event.h"
@@ -24,8 +25,8 @@
 
 #define SDA_PIN GPIO_NUM_8
 #define SCL_PIN GPIO_NUM_9
-
 #define MAX_RETRY 10
+#define SLEEP_TIME_US 60000000
 
 static EventGroupHandle_t wifi_event_group;
 const int WIFI_CONNECTED_BIT = BIT0;
@@ -133,6 +134,7 @@ sensor_data_t sensor_read(void) {
     com_rslt += bme280_set_filter(BME280_FILTER_COEFF_16);
 
     com_rslt += bme280_set_power_mode(BME280_NORMAL_MODE);
+    vTaskDelay(pdMS_TO_TICKS(100));
     if(com_rslt == SUCCESS){
 
         com_rslt = bme280_read_uncomp_pressure_temperature_humidity(&v_uncomp_pressure, &v_uncomp_temperature, &v_uncomp_humidity);
@@ -269,4 +271,9 @@ void app_main(void) {
 
     sensor_data_t post_data = sensor_read();
     post_request(post_data.temp, post_data.hum, post_data.pa);
+
+    ESP_LOGI("TEMP_MONITOR", "Starting deep sleep for %d seconds", SLEEP_TIME_US/1000000);
+
+    esp_sleep_enable_timer_wakeup(SLEEP_TIME_US);
+    esp_deep_sleep_start();
 }
