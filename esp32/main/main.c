@@ -15,18 +15,20 @@
 #include "esp_http_client.h"
 
 #include "freertos/task.h"
+#include "freertos/event_groups.h"
 
 #include "sdkconfig.h"
 #include "bme280.h"
+#include "wifi_config.h"
+#include "sensor_data.h"
 
 #define SDA_PIN GPIO_NUM_8
 #define SCL_PIN GPIO_NUM_9
 
-#include "wifi_config.h"
 #define MAX_RETRY 10
 
-#define API_ENDPOINT "http://localhost:8080/readings/submitReading"
-
+static EventGroupHandle_t wifi_event_group;
+const int WIFI_CONNECTED_BIT = BIT0;
 static int retry_cnt = 0;
 
 void i2c_controller_init() {
@@ -105,7 +107,9 @@ void BME280_delay_msec(u32 msec) {
     vTaskDelay(msec/portTICK_PERIOD_MS);
 }
 
-void sensor_reading(void *params){
+sensor_data_t sensor_read(void) {
+
+    sensor_data_t data = {0};
 
     struct bme280_t bme280 = {
         .bus_write = BME280_I2C_bus_write,
@@ -130,21 +134,23 @@ void sensor_reading(void *params){
 
     com_rslt += bme280_set_power_mode(BME280_NORMAL_MODE);
     if(com_rslt == SUCCESS){
-        while (true){
-            vTaskDelay(40/portTICK_PERIOD_MS);
 
-            com_rslt = bme280_read_uncomp_pressure_temperature_humidity(&v_uncomp_pressure, &v_uncomp_temperature, &v_uncomp_humidity);
+        com_rslt = bme280_read_uncomp_pressure_temperature_humidity(&v_uncomp_pressure, &v_uncomp_temperature, &v_uncomp_humidity);
 
-            double temp = bme280_compensate_temperature_double(v_uncomp_temperature);
-            double hum = bme280_compensate_humidity_double(v_uncomp_humidity);
-            double pa = (bme280_compensate_pressure_double(v_uncomp_pressure)/100);
+        double temp = bme280_compensate_temperature_double(v_uncomp_temperature);            
+        double hum = bme280_compensate_humidity_double(v_uncomp_humidity);
+        double pa = (bme280_compensate_pressure_double(v_uncomp_pressure)/100);
 
-            ESP_LOGI("Sensor", "Temp=%.2fC Hum=%.2f%% Pressure=%.2f hPa", temp, hum, pa);
-        }
+        ESP_LOGI("Sensor", "Temp=%.2fC Hum=%.2f%% Pressure=%.2f hPa", temp, hum, pa);
+
+        data.temp = temp;
+        data.hum = hum;
+        data.pa = pa;
+
     } else {
         ESP_LOGE("Error", "Init or setting error. Code: %d", com_rslt);
-        vTaskDelete(NULL);
     }
+    return data;
 }
 
 static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data){
@@ -160,6 +166,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
             break;
         
         case IP_EVENT_STA_GOT_IP:
+            xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
             ESP_LOGI("TEMP_MONITOR", "Got IP");
             break;
 
@@ -179,6 +186,8 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
 
 void wifi_init(void) {
 
+    wifi_event_group = xEventGroupCreate();
+
     esp_event_loop_create_default();
     esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL);
     esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL);
@@ -192,12 +201,57 @@ void wifi_init(void) {
     };
     esp_netif_init();
     esp_netif_create_default_wifi_sta();
+
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     esp_wifi_init(&cfg);
     esp_wifi_set_mode(WIFI_MODE_STA);
     esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config);
     esp_wifi_start();
     esp_wifi_connect();
+
+    xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT,
+                        false, true, portMAX_DELAY);
+    ESP_LOGI("WiFi", "Connected and ready!");
+}
+
+esp_err_t client_event_handler(esp_http_client_event_handle_t evt){
+
+    switch(evt->event_id){
+
+        case HTTP_EVENT_ON_DATA:
+            printf("HTTP_EVENT_ON_DATA: %.*s\n", evt->data_len, (char *)evt->data);
+            break;
+
+        default:
+            break;
+    }
+    return ESP_OK;
+}
+
+static void post_request(double temp, double hum, double pa) {
+    
+    esp_http_client_config_t config = {
+        .url = API_ENDPOINT,
+        .transport_type = HTTP_TRANSPORT_OVER_TCP,
+        .event_handler = client_event_handler
+    };
+
+    esp_http_client_handle_t client = esp_http_client_init(&config);
+
+    char buffer[128];
+    snprintf(buffer, sizeof(buffer), "{\"temperature\":%.2f, \"humidity\":%.2f, \"pressure\":%.2f}", temp, hum, pa);
+
+    esp_http_client_set_method(client, HTTP_METHOD_POST);
+    esp_http_client_set_post_field(client, buffer, strlen(buffer));
+    esp_http_client_set_header(client, "Content-Type", "application/json");
+
+    esp_err_t err = esp_http_client_perform(client);
+    if (err == ESP_OK) {
+        ESP_LOGI("POST", "Data sent successfully");
+    } else {
+        ESP_LOGE("POST", "Failed to send data: %s", esp_err_to_name(err));
+    }
+    esp_http_client_cleanup(client);
 }
 
 void app_main(void) {
@@ -212,5 +266,7 @@ void app_main(void) {
     ESP_ERROR_CHECK(ret);
     wifi_init();
     i2c_controller_init();
-    xTaskCreate(sensor_reading, "Sensor Reading", 1024*5, NULL, 5, NULL);
+
+    sensor_data_t post_data = sensor_read();
+    post_request(post_data.temp, post_data.hum, post_data.pa);
 }
