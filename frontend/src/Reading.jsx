@@ -1,4 +1,3 @@
-import axios from "axios";
 import React, { useState, useEffect } from "react";
 
 function Reading(){
@@ -23,16 +22,23 @@ function Reading(){
 
     return(
         <div>
-            <h2>Most Recent Reading</h2>
+            <div className="separator"></div>
+            <span className="projectDemoDesc">IoT project I made to learn how to use Spring Boot, PostgreSQL and Docker, to play around with the ESP32 IDF<br />
+            and the basis for this website's existence as a reason to deploy a website on AWS. <br /></span>
+
+            <span><br/ >This reading will automatically update every 60 seconds if I've remembered to power the ESP32. <br /></span>
+            <h3>Most Recent Reading</h3>
             {reading ? (
                 <div>
-                    <p>Temperature: {reading.temperature}</p>  
-                    <p>Humidity: {reading.humidity}</p>  
-                    <p>Pressure: {reading.pressure}</p>   
+                    <p>Temperature: <strong>{reading.temperature} °C</strong></p>  
+                    <p>Humidity: <strong>{reading.humidity}%</strong></p>  
+                    <p>Pressure: <strong>{reading.pressure} hPa</strong></p>
+                    <p>Timestamp: <strong>{new Date(reading.timestamp).toLocaleString()}</strong></p>   
                 </div>
             ) : (
                 <p>Loading...</p>
             )}
+            <div className="separator"></div>
         </div>
     );
 }
