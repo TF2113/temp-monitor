@@ -1,6 +1,6 @@
 ---
 title: Initial Blog Post
-date: 02/10/25
+date: 2025-10-02T14:00:00
 ---
 
 Hi,

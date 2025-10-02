@@ -26,7 +26,7 @@ function Blog() {
         {blogPosts.map((post) => (
           <div key={post.slug} style={{ marginBottom: "0.5em" }}>
             <Link to={`/blog/${post.slug}`}>
-              ({post.date}) - {post.title}
+              ({new Date(post.date).toISOString().split("T")[0]}) - {post.title}
             </Link>
           </div>
         ))}

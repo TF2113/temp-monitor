@@ -34,7 +34,7 @@ function BlogPost() {
         <>
           <h2>{post.data.title}</h2>
           <p>
-            <em>{post.data.date}</em>
+            <em>{new Date(post.data.date).toISOString().split("T")[0]}</em>
           </p>
           <div className="blogContent">
           <ReactMarkdown rehypePlugins={[rehypeRaw]}>
