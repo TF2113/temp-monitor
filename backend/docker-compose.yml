@@ -27,6 +27,16 @@ services:
     depends_on:
       - db
 
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "80:80"
+    networks:
+      - lan_network
+    depends_on:
+      - backend
+
 volumes:
   postgres-data:
 

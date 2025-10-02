@@ -13,5 +13,12 @@ export const projects = [
     description: "Embedded style system for assisting visually impaired users navigate urban areas",
     tech: ["C", "Raspberry Pi", "YOLO Ultralytics", "Python"],
     github: "https://github.com/TF2113/mobility-aid"
+  },
+  {
+    id: 3,
+    title: "Academic Progression Dashboard",
+    description: "CRUD and RBAC webapp for students & administrators to upload and track student grades",
+    tech: ["JavaScript", "MySQL", "Node & Express.js"],
+    github: "https://github.com/TF2113/academic-progression"
   }
 ];

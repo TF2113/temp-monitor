@@ -60,6 +60,24 @@ h1 {
   padding-top: 2px;
 }
 
+.pageTitle {
+  text-align: center;
+}
+
+.blogContent {
+  max-width: 650px;
+}
+
+.spotifyEmbed {
+  text-align: center;      
+}
+
+.spotifyEmbed iframe {
+  display: inline-block;
+  margin: 0 auto;
+  width: 50% !important;
+}
+
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -89,5 +107,18 @@ button:focus-visible {
  
   button {
     background-color: #f9f9f9;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding-top: 0.25rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .spotifyEmbed iframe {
+    width: 100% !important;
+    height: 152px;
   }
 }
