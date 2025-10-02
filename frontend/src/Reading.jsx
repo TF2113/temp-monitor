@@ -5,7 +5,7 @@ function Reading(){
     const [reading, setReading] = useState(null);
 
     const fetchReading = () => {
-        fetch('http://localhost:8080/readings/recentReading')
+        fetch('http://tombuilds.tech:8080/readings/recentReading')
         .then((response) => response.json())
         .then((data) => {setReading(data);
         })
