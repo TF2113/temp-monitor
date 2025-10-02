@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 @RestController
-@CrossOrigin(origins = {"http://localhost:5173","http://127.0.0.1:5173"}, allowCredentials = "true")
+@CrossOrigin(origins = {"http://tombuilds.tech"}, allowCredentials = "true")
 @RequestMapping("/readings")
 public class ReadingController {
 
