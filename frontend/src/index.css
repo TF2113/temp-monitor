@@ -68,6 +68,14 @@ h1 {
   max-width: 650px;
 }
 
+.blogImage{
+  display: grid;
+  place-items: center;
+  img {
+    height: 325px;
+  }
+}
+
 .spotifyEmbed {
   text-align: center;      
 }
