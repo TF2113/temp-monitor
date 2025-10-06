@@ -76,6 +76,15 @@ h1 {
   }
 }
 
+.blogImageCode{
+  display: grid;
+  place-items: center;
+  img {
+    height: 325px;
+    width: 350px;
+  }
+}
+
 .spotifyEmbed {
   text-align: center;      
 }

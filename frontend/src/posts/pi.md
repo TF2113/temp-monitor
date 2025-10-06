@@ -20,7 +20,7 @@ This project was my first real exposure to C. Although having done the CS50 onli
 
 I had considered using Rust or C++ but after taking a look at the syntax and my 3 month timespan, I decided against for the sake of development speed. Rust does still call to me as a language I'd like to explore though.
 
-<div className="blogImage">
+<div className="blogImageCode">
     <span><small>C code for GPIO functionality</small></span>
     <img src="https://d13prx4uxyzd87.cloudfront.net/bitshift.png"></img>
 </div>
