@@ -33,7 +33,10 @@ function Reading(){
                     <p>Temperature: <strong>{reading.temperature} °C</strong></p>  
                     <p>Humidity: <strong>{reading.humidity}%</strong></p>  
                     <p>Pressure: <strong>{reading.pressure} hPa</strong></p>
-                    <p>Taken at: <strong>{new Date(reading.timestamp).toLocaleString()}</strong></p>   
+                    <p>Taken at: <strong>{new Date(reading.timestamp).toLocaleString("en-GB", {
+                        timeZone: "Europe/London",
+                        hour12: false
+                    })}</strong></p>   
                 </div>
             ) : (
                 <p>Loading...</p>
