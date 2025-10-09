@@ -14,7 +14,7 @@ services:
       - postgres-data:/var/lib/postgresql/data
 
   backend:
-    build: .
+    build: /home/ec2-user/temp-monitor/backend
     container_name: backend
     ports:
       - "8080:8080"
@@ -28,7 +28,7 @@ services:
       - db
 
   frontend:
-    build: ../frontend
+    build: /home/ec2-user/temp-monitor/frontend
     container_name: frontend
     ports:
       - "80:80"
