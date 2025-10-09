@@ -1,3 +1,4 @@
 /.vscode
 /build
 /main/wifi_config.h
+/main/certs
