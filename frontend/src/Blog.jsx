@@ -21,7 +21,7 @@ function Blog() {
   return (
     <div>
       <div className="separator"></div>
-      <h2 className="pageTitle">Blog</h2>
+      <h2 className="pageTitle">Posts</h2>
       <div className="blogList">
         {blogPosts.map((post) => (
           <div key={post.slug} style={{ marginBottom: "0.5em" }}>
