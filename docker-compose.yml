@@ -30,8 +30,6 @@ services:
   frontend:
     build: /home/ec2-user/temp-monitor/frontend
     container_name: frontend
-    ports:
-      - "80:80"
     networks:
       - lan_network
     depends_on:
