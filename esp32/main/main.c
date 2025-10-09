@@ -28,6 +28,9 @@
 #define MAX_RETRY 10
 #define SLEEP_TIME_US 60000000
 
+extern const uint8_t server_cert_pem_start[] asm("_binary_server_cert_pem_start");
+extern const uint8_t server_cert_pem_end[]   asm("_binary_server_cert_pem_end");
+
 static EventGroupHandle_t wifi_event_group;
 const int WIFI_CONNECTED_BIT = BIT0;
 static int retry_cnt = 0;
@@ -235,6 +238,7 @@ static void post_request(double temp, double hum, double pa) {
     esp_http_client_config_t config = {
         .url = API_ENDPOINT,
         .transport_type = HTTP_TRANSPORT_OVER_TCP,
+        .cert_pem = (char *) server_cert_pem_start,
         .event_handler = client_event_handler
     };
 
