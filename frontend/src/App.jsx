@@ -4,6 +4,7 @@ import Footer from "./Footer";
 import About from "./About";
 import Projects from "./Projects";
 import Reading from "./Reading";
+import History from "./History";
 import Blog from "./Blog";
 import BlogPost from "./BlogPost";
 
@@ -17,6 +18,7 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/projects" element={<Projects />} />
         <Route path="/projects/reading" element={<Reading />} />
+        <Route path="/projects/reading/history" element={<History />} />
         <Route path="/blog" element={<Blog />} />
         <Route path="/blog/:slug" element={<BlogPost />} />
       </Routes>

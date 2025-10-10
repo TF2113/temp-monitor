@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 function Reading(){
 
@@ -36,10 +37,18 @@ function Reading(){
                     <p>Taken at: <strong>{new Date(reading.timestamp + "Z").toLocaleString("en-GB", {
                         timeZone: "Europe/London",
                         hour12: false
-                    })}</strong></p>   
+                    })}</strong></p>  
+                    <span> <br /> </span>
+                    <a href="https://www.linkedin.com/in/tomferguson404/" target="_blank" rel="noopener noreferrer">LinkedIn</a> 
                 </div>
             ) : (
-                <p>Loading...</p>
+                <div>
+                    <p>
+                        Loading...
+                    </p>
+                    <p><Link to="./history">View Reading History</Link></p>
+                </div>
+                
             )}
             <div className="separator"></div>
         </div>
