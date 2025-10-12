@@ -9,5 +9,5 @@ public record ReadingDto(
         Double humidity,
         Double pressure,
         LocalDateTime timestamp
-) {
-}
+){}
+

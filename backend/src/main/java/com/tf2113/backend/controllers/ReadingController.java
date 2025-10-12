@@ -1,12 +1,13 @@
 package com.tf2113.backend.controllers;
 
+import com.tf2113.backend.domain.dto.ReadingDto;
 import com.tf2113.backend.domain.entities.Reading;
 import com.tf2113.backend.repositories.ReadingRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.List;
 
 @RestController
 @CrossOrigin(origins = {"http://tombuilds.tech"}, allowCredentials = "true")
@@ -48,6 +49,12 @@ public class ReadingController {
     public Double getAveragePressure(@RequestParam("period") String period) {
         LocalDateTime start = calculateStartTime(period);
         return readingRepository.findAveragePressureSince(start);
+    }
+
+    @GetMapping("/readingsSince")
+    public List<ReadingDto> getReadingsFromStart(@RequestParam("period") String period) {
+        LocalDateTime start = calculateStartTime(period);
+        return readingRepository.getReadingsFromStart(start);
     }
 
     private LocalDateTime calculateStartTime(String period) {

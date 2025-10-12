@@ -9,30 +9,40 @@ function History(){
 
     const fetchReading = async () => {
       try {
-        const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&past_days=10&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m");
+        const res = await fetch("https://tombuilds.tech/readings/readingsSince?period=day");
         const data = await res.json();
         
-        const temps = data.hourly.temperature_2m.slice(0, 24);
-        const times = data.hourly.time.slice(0, 24);
-        const humidity = data.hourly.relative_humidity_2m.slice(0, 24);
+        const temps = data.map(r => r.temperature);
+        const times = data.map(r => new Date(r.timestamp).toLocaleTimeString())
+        const humidity = data.map(r => r.humidity);
+        const pressure = data.map(r => r.pressure);
   
-          setTempData({
-            labels: times,
-            datasets: [{
-              label: "Temperature (C)",
-              data: temps,
-              borderColor: "red"
-            }]
-          })
+        setTempData({
+          labels: times,
+          datasets: [{
+            label: "Temperature (C)",
+            data: temps,              
+            borderColor: "red"
+          }]
+        })
   
-          setHumData({
-            labels: times,
-            datasets: [{
-              label: "Humidity (%)",
-              data: humidity,
-              borderColor: "blue"
-            }]
-          })
+        setHumData({
+          labels: times,
+          datasets: [{            
+            label: "Humidity (%)",
+            data: humidity,
+            borderColor: "blue"
+          }]
+        })
+
+        setPaData({
+          labels: times,
+          datasets: [{            
+            label: "Pressure (hPa)",
+            data: pressure,
+            borderColor: "yellow"
+          }]
+        })
 
       } catch (err) {
       console.log(err)
@@ -49,6 +59,7 @@ function History(){
             <h2 className="pageTitle">Reading History</h2>
             <LineChart chartTitle ={"Temp History"} chartData={tempData}/>
             <LineChart chartTitle ={"Humidity History"} chartData={humData}/>
+            <LineChart chartTitle ={"Pressure History"} chartData={paData}/>
             <div className="separator"></div>
 
         </div>
