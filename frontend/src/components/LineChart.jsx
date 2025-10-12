@@ -13,6 +13,8 @@ import {
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 function LineChart({ chartTitle, chartData }){
+    if (!chartData) return <p>Loading {chartTitle}...</p>;
+    
     return(
         <div className="chartContainer">
             <Line

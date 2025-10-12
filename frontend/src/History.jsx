@@ -1,44 +1,47 @@
 import LineChart from "./components/LineChart.jsx"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 function History(){
 
-    const [tempData, setTempData] = useState({
-        labels: ["10:00", "10:05", "10:10", "10:15", "10:20"],
-        datasets: [
-      {
-        label: "Temperature (°C)",
-        data: [23.5, 23.8, 23.9, 24.1, 23.7],
-        borderColor: "rgb(75, 192, 192)",
-        backgroundColor: "rgba(75, 192, 192, 0.2)",
-        tension: 0.3, 
-      }
-    ]
-});
-    const [humData, setHuData] = useState({
-        labels: ["10:00", "10:05", "10:10", "10:15", "10:20"],
-        datasets: [
-      {
-        label: "Humidity (%)",
-        data: [64, 63, 62, 65, 64],
-        borderColor: "rgb(54, 162, 235)",
-        backgroundColor: "rgba(54, 162, 235, 0.2)",
-        tension: 0.3,
-      }
-    ]
-});
-    const [paData, setPaData] = useState({
-        labels: ["10:00", "10:05", "10:10", "10:15", "10:20"],
-        datasets: [
-      {
-        label: "Pressure (hPa)",
-        data: [1035, 1034, 1036, 1033, 1035],
-        borderColor: "rgb(255, 205, 86)",
-        backgroundColor: "rgba(255, 205, 86, 0.2)",
-        tension: 0.3,
-      }
-    ]
-  });
+    const [tempData, setTempData] = useState(null);
+    const [humData, setHumData] = useState(null);
+    const [paData, setPaData] = useState(null);
+
+    const fetchReading = async () => {
+      try {
+        const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&past_days=10&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m");
+        const data = await res.json();
+        
+        const temps = data.hourly.temperature_2m.slice(0, 24);
+        const times = data.hourly.time.slice(0, 24);
+        const humidity = data.hourly.relative_humidity_2m.slice(0, 24);
+  
+          setTempData({
+            labels: times,
+            datasets: [{
+              label: "Temperature (C)",
+              data: temps,
+              borderColor: "red"
+            }]
+          })
+  
+          setHumData({
+            labels: times,
+            datasets: [{
+              label: "Humidity (%)",
+              data: humidity,
+              borderColor: "blue"
+            }]
+          })
+
+      } catch (err) {
+      console.log(err)
+    } 
+  }
+
+    useEffect(() => {
+      fetchReading();
+    }, []);
 
     return(
         <div>
@@ -46,7 +49,6 @@ function History(){
             <h2 className="pageTitle">Reading History</h2>
             <LineChart chartTitle ={"Temp History"} chartData={tempData}/>
             <LineChart chartTitle ={"Humidity History"} chartData={humData}/>
-            <LineChart chartTitle ={"Pressure History"}  chartData={paData}/>
             <div className="separator"></div>
 
         </div>
