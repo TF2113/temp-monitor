@@ -38,7 +38,7 @@ function Reading(){
                         timeZone: "Europe/London",
                         hour12: false
                     })}</strong></p>  
-                    <span> <br /> </span>
+                    <span></span>
                     <p><Link to="./history">View Reading History</Link></p> 
                 </div>
             ) : (
