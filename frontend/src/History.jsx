@@ -13,7 +13,10 @@ function History(){
         const data = await res.json();
         
         const temps = data.map(r => r.temperature);
-        const times = data.map(r => new Date(r.timestamp).toLocaleTimeString())
+        const times = data.map(r => new Date(r.timestamp + "Z").toLocaleTimeString("en-GB", {
+                        timeZone: "Europe/London",
+                        hour12: false
+                      }));
         const humidity = data.map(r => r.humidity);
         const pressure = data.map(r => r.pressure);
   
