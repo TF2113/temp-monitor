@@ -39,7 +39,7 @@ function Reading(){
                         hour12: false
                     })}</strong></p>  
                     <span> <br /> </span>
-                    <a href="https://www.linkedin.com/in/tomferguson404/" target="_blank" rel="noopener noreferrer">LinkedIn</a> 
+                    <p><Link to="./history">View Reading History</Link></p> 
                 </div>
             ) : (
                 <div>
