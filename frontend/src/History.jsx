@@ -3,32 +3,63 @@ import { useEffect, useState } from "react";
 import Select from "react-select";
 
 function History() {
-  
   const options = [
     { value: "day", label: "Daily" },
     { value: "week", label: "Weekly" },
     { value: "month", label: "Monthly" },
   ];
-  
+
   const [selectedOption, setSelectedOption] = useState(options[0]);
   const [tempData, setTempData] = useState(null);
   const [humData, setHumData] = useState(null);
   const [paData, setPaData] = useState(null);
 
-  const fetchReading = async (selectedOption) => {
+  const fetchReading = async (period) => {
     try {
       const res = await fetch(
-        `https://tombuilds.tech/readings/readingsSince?period=${selectedOption}`
+        `https://tombuilds.tech/readings/readingsSince?period=${period}`
       );
       const data = await res.json();
 
       const temps = data.map((r) => r.temperature);
-      const times = data.map((r) =>
-        new Date(r.timestamp + "Z").toLocaleTimeString("en-GB", {
-          timeZone: "Europe/London",
-          hour12: false,
-        })
-      );
+
+      let times;
+
+      switch (period) {
+        case "day":
+          times = data.map((r) =>
+            new Date(r.timestamp + "Z").toLocaleTimeString("en-GB", {
+              timeZone: "Europe/London",
+              hour12: false,
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          );
+          break;
+
+        case "week":
+          const weekdays = data.map((r) =>
+            new Date(r.timestamp + "Z").toLocaleDateString("en-GB", {
+              weekday: "long",
+            })
+          );
+          let lastDay = null;
+          times = weekdays.map((day) => {
+            if (day === lastDay) return "";
+            lastDay = day;
+            return day;
+          });
+          
+        case "month":
+          const days = data.map((r) => new Date(r.timestamp + "Z").getDate());
+          let lastDate = null;
+          times = days.map((day) => {
+            if (day === lastDate) return "";
+            lastDate = day;
+            return day;
+          });
+          break;
+      }
       const humidity = data.map((r) => r.humidity);
       const pressure = data.map((r) => r.pressure);
 
@@ -71,8 +102,8 @@ function History() {
 
   const onChange = (userOption) => {
     setSelectedOption(userOption);
-    fetchReading(userOption.value)
-  }
+    fetchReading(userOption.value);
+  };
 
   useEffect(() => {
     fetchReading(selectedOption.value);
@@ -82,11 +113,7 @@ function History() {
     <div>
       <div className="separator"></div>
       <h2 className="pageTitle">Reading History</h2>
-      <Select
-        value={selectedOption}
-        onChange={onChange}
-        options={options}
-      />
+      <Select value={selectedOption} onChange={onChange} options={options} />
       <LineChart chartTitle={"Temp History"} chartData={tempData} />
       <LineChart chartTitle={"Humidity History"} chartData={humData} />
       <LineChart chartTitle={"Pressure History"} chartData={paData} />
