@@ -38,28 +38,37 @@ function History() {
           break;
 
         case "week":
-          const weekdays = data.map((r) =>
-            new Date(r.timestamp + "Z").toLocaleDateString("en-GB", {
-              weekday: "long",
-            })
-          );
-          let lastDay = null;
-          times = weekdays.map((day) => {
-            if (day === lastDay) return "";
-            lastDay = day;
-            return day;
-          });
-          
-        case "month":
-          const days = data.map((r) => new Date(r.timestamp + "Z").getDate());
-          let lastDate = null;
-          times = days.map((day) => {
-            if (day === lastDate) return "";
-            lastDate = day;
-            return day;
+          times = data.map((r) => {
+            const d = new Date(r.timestamp + "Z");
+            const weekday = d.toLocaleDateString("en-GB", { weekday: "short" });
+            const time = d.toLocaleTimeString("en-GB", {
+              timeZone: "Europe/London",
+              hour12: false,
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+            return `${weekday} ${time}`;
           });
           break;
+
+        case "month":
+          times = data.map((r) => {
+            const d = new Date(r.timestamp + "Z");
+            const day = d.getDate();
+            const time = d.toLocaleTimeString("en-GB", {
+              timeZone: "Europe/London",
+              hour12: false,
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+            return `${day} ${time}`;
+          });
+          break;
+
+        default:
+          times = [];
       }
+      
       const humidity = data.map((r) => r.humidity);
       const pressure = data.map((r) => r.pressure);
 
