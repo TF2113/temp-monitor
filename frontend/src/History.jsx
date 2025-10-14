@@ -54,21 +54,24 @@ function History() {
         case "month":
           times = data.map((r) => {
             const d = new Date(r.timestamp + "Z");
-            const day = d.getDate();
+            const dayMonth = d.toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "2-digit",
+            });
             const time = d.toLocaleTimeString("en-GB", {
               timeZone: "Europe/London",
               hour12: false,
               hour: "2-digit",
               minute: "2-digit",
             });
-            return `${day} ${time}`;
+            return `${dayMonth} ${time}`;
           });
           break;
 
         default:
           times = [];
       }
-      
+
       const humidity = data.map((r) => r.humidity);
       const pressure = data.map((r) => r.pressure);
 
