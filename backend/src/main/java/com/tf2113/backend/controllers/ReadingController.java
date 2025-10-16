@@ -3,6 +3,8 @@ package com.tf2113.backend.controllers;
 import com.tf2113.backend.domain.dto.ReadingDto;
 import com.tf2113.backend.domain.entities.Reading;
 import com.tf2113.backend.repositories.ReadingRepository;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,16 +18,29 @@ public class ReadingController {
 
     private final ReadingRepository readingRepository;
 
+    @Value("${ESP_API_KEY}")
+    private String ESP_API_KEY;
+
     public ReadingController(ReadingRepository readingRepository) {
         this.readingRepository = readingRepository;
     }
 
     @PostMapping("/submitReading")
-    public Reading saveReading(@RequestBody Reading reading){
+    public ResponseEntity<?> saveReading(
+            @RequestBody Reading reading,
+            @RequestHeader(value = "X-API-KEY", required = false) String apiKey) {
+
+        if(apiKey == null || !apiKey.equals(ESP_API_KEY)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid API key");
+        }
+
         if(reading.getTimestamp() == null){
             reading.setTimestamp(LocalDateTime.now());
         }
-        return readingRepository.save(reading);
+
+        Reading saved = readingRepository.save(reading);
+        return ResponseEntity.ok(saved);
     }
 
     @GetMapping("/recentReading")
