@@ -8,8 +8,6 @@ services:
       POSTGRES_DB: esp_data
     ports:
       - "5432:5432"
-    env_file:
-      - ./backend/.env
     networks:
       - lan_network
     volumes:
@@ -22,6 +20,8 @@ services:
       - "8080:8080"
     networks:
       - lan_network
+    env_file:
+      - ./backend/.env
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/esp_data
       SPRING_DATASOURCE_USERNAME: user
