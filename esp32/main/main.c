@@ -250,6 +250,8 @@ static void post_request(double temp, double hum, double pa) {
     esp_http_client_set_method(client, HTTP_METHOD_POST);
     esp_http_client_set_post_field(client, buffer, strlen(buffer));
     esp_http_client_set_header(client, "Content-Type", "application/json");
+    esp_http_client_set_header(client, "X-API-KEY", API_KEY);
+
 
     esp_err_t err = esp_http_client_perform(client);
     if (err == ESP_OK) {
@@ -274,7 +276,23 @@ void app_main(void) {
     i2c_controller_init();
 
     sensor_data_t post_data = sensor_read();
-    post_request(post_data.temp, post_data.hum, post_data.pa);
+
+    int retry_cnt = 0;
+
+    while (post_data.pa == 0 && post_data.hum == 0 && post_data.temp == 0){
+        post_data = sensor_read();
+        retry_cnt++;
+        vTaskDelay(pdMS_TO_TICKS(100));
+
+        if (retry_cnt == 3){
+            ESP_LOGI("TEMP_MONITOR", "Failed to get valid reading after 3 tries.");
+            break;
+        }
+    }
+
+    if (post_data.pa != 0){
+        post_request(post_data.temp, post_data.hum, post_data.pa);
+    }
 
     ESP_LOGI("TEMP_MONITOR", "Starting deep sleep for %d seconds", SLEEP_TIME_US/1000000);
 
