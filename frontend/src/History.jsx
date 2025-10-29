@@ -14,18 +14,25 @@ function History() {
   const [humData, setHumData] = useState(null);
   const [paData, setPaData] = useState(null);
 
-  const fetchReading = async (period) => {
+  const fetchReading = async (option) => {
     try {
-      const res = await fetch(
-        `https://tombuilds.tech/readings/readingsSince?period=${period}`
-      );
+      let res;
+      if (option.label == "Monthly"){
+         res = await fetch(
+          `https://tombuilds.tech/readings/monthlyReadings?period=month`
+        );
+      } else {
+         res = await fetch(
+          `https://tombuilds.tech/readings/readingsSince?period=${option.value}`
+        );
+      }
       const data = await res.json();
 
       const temps = data.map((r) => r.temperature);
 
       let times;
 
-      switch (period) {
+      switch (option.value) {
         case "day":
           times = data.map((r) =>
             new Date(r.timestamp + "Z").toLocaleTimeString("en-GB", {
@@ -114,11 +121,11 @@ function History() {
 
   const onChange = (userOption) => {
     setSelectedOption(userOption);
-    fetchReading(userOption.value);
+    fetchReading(userOption);
   };
 
   useEffect(() => {
-    fetchReading(selectedOption.value);
+    fetchReading(selectedOption);
   }, []);
 
   return (
