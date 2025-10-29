@@ -30,6 +30,19 @@ public interface ReadingRepository extends JpaRepository<Reading, UUID> {
     """)
     List<ReadingDto> getReadingsFromStart(@Param("start") LocalDateTime start);
 
+    @Query("""
+    SELECT new com.tf2113.backend.domain.dto.ReadingDto(
+        r.id,
+        r.temperature,
+        r.humidity,
+        r.pressure,
+        r.timestamp
+    )
+    FROM Reading r
+    WHERE r.timestamp >= :start
+    """)
+    List<ReadingDto> getMonthlyReadings(@Param("start") LocalDateTime start);
+
     @Query("SELECT AVG(r.temperature) from Reading r WHERE r.timestamp >= :start")
     Double findAverageTempSince(@Param("start") LocalDateTime start);
 

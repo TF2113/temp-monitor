@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -70,6 +71,19 @@ public class ReadingController {
     public List<ReadingDto> getReadingsFromStart(@RequestParam("period") String period) {
         LocalDateTime start = calculateStartTime(period);
         return readingRepository.getReadingsFromStart(start);
+    }
+
+    @GetMapping("/monthlyReadings")
+    public List<ReadingDto> getMonthlyReadings() {
+        LocalDateTime start = calculateStartTime("month");
+        List<ReadingDto> allReadings = readingRepository.getMonthlyReadings(start);
+
+        int step = 5;
+        List<ReadingDto> condensed = new ArrayList<>();
+        for (int i = 0; i < allReadings.size(); i += step) {
+            condensed.add(allReadings.get(i));
+        }
+        return condensed;
     }
 
     private LocalDateTime calculateStartTime(String period) {
