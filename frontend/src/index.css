@@ -125,6 +125,11 @@ button:focus-visible {
     padding-right: 1rem;
   }
 
+  .mobile {
+    height: 90%;
+    width: 90%;
+  }
+
   .spotifyEmbed iframe {
     width: 100% !important;
     height: 152px;
